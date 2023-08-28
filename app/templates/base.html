@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+    <head>
+      {% if title %}
+      <title>{{ title }} - Recipe Book</title>
+      {% else %}
+      <title>Welcome to the Recipe Book</title>
+      {% endif %}
+    </head>
+    <body>
+        <div>Recipe Book: <a href="/index">Home</a></div>
+        <hr>
+        {% block content %}{% endblock %}
+    </body>
+</html>
