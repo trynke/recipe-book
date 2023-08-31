@@ -1,12 +1,18 @@
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin 
 from hashlib import md5
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 from app import db, login
 
 @login.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+followers = db.Table('followers',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+)
 
 
 class User(UserMixin, db.Model):
@@ -16,6 +22,11 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     about_me = db.Column(db.String(140))
     recipes = db.relationship('Recipe', backref='author', lazy='dynamic')
+    followed = db.relationship(
+        'User', secondary=followers,
+        primaryjoin=(followers.c.follower_id == id),
+        secondaryjoin=(followers.c.followed_id == id),
+        backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
