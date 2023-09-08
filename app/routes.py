@@ -3,29 +3,31 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
 
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, EditProfileForm, EmptyForm
-from app.models import User
+from app.forms import LoginForm, RegistrationForm, EditProfileForm, EmptyForm, RecipeForm
+from app.models import User, Recipe
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    recipes = [
-        {
-            'author': {'username': 'John'},
-            'name': 'Apple pie'
-        },
-        {
-            'author': {'username': 'Susan'},
-            'name': 'Pumpkin soup'
-        },
-        {
-            'author': {'username': 'Dora'},
-            'name': 'Pumpkin cinnamon buns'
-        }
-    ]
-    return render_template('index.html', title='Home Page', recipes=recipes)
+    form = RecipeForm()
+    if form.validate_on_submit():
+        recipe = Recipe(name=form.recipe.data, author=current_user)
+        db.session.add(recipe)
+        db.session.commit()
+        flash('You just added a new recipe!')
+        return redirect(url_for('index'))
+    page = request.args.get('page', 1, type=int)
+    recipes = current_user.followed_recipes().paginate(
+        page=page, per_page=app.config['RECIPES_PER_PAGE'], error_out=False)
+    next_url = url_for('index', page=recipes.next_num) \
+        if recipes.has_next else None
+    prev_url = url_for('index', page=recipes.prev_num) \
+        if recipes.has_prev else None
+    return render_template('index.html', title='Home', form=form,
+                           recipes=recipes.items, next_url=next_url,
+                           prev_url=prev_url)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -70,13 +72,17 @@ def register():
 @app.route('/user/<username>')
 @login_required
 def user(username):
-    this_user = User.query.filter_by(username=username).first_or_404()
-    recipes = [
-        {'author': this_user, 'name': 'Test recipe #1'},
-        {'author': this_user, 'name': 'Test recipe #2'}
-    ]
+    user = User.query.filter_by(username=username).first_or_404()
+    page = request.args.get('page', 1, type=int)
+    recipes = user.recipes.order_by(Recipe.timestamp.desc()).paginate(
+        page=page, per_page=app.config['RECIPES_PER_PAGE'], error_out=False)
+    next_url = url_for('user', username=user.username, page=recipes.next_num) \
+        if recipes.has_next else None
+    prev_url = url_for('user', username=user.username, page=recipes.prev_num) \
+        if recipes.has_prev else None
     form = EmptyForm()
-    return render_template('user.html', user=this_user, recipes=recipes, form=form)
+    return render_template('user.html', user=user, recipes=recipes.items,
+                           next_url=next_url, prev_url=prev_url, form=form)
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -133,3 +139,16 @@ def unfollow(username):
         return redirect(url_for('user', username=username))
     return redirect(url_for('index'))
     
+
+@app.route('/explore')
+@login_required
+def explore():
+    page = request.args.get('page', 1, type=int)
+    recipes = Recipe.query.order_by(Recipe.timestamp.desc()).paginate(
+        page=page, per_page=app.config['RECIPES_PER_PAGE'], error_out=False)
+    next_url = url_for('explore', page=recipes.next_num) \
+        if recipes.has_next else None
+    prev_url = url_for('explore', page=recipes.prev_num) \
+        if recipes.has_prev else None
+    return render_template("index.html", title='Explore', recipes=recipes.items,
+                          next_url=next_url, prev_url=prev_url)

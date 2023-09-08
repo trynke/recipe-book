@@ -32,4 +32,10 @@
     {% for recipe in recipes %}
         {% include '_recipe.html' %}
     {% endfor %}
+    {% if prev_url %}
+    <a href="{{ prev_url }}">&lt;</a>
+    {% endif %}
+    {% if next_url %}
+    <a href="{{ next_url }}">&gt;</a>
+    {% endif %}
 {% endblock %}
