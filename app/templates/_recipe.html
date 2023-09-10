@@ -6,10 +6,13 @@
             </a>
         </td>
         <td>
-            <a href="{{ url_for('user', username=recipe.author.username) }}">
-                {{ recipe.author.username }}
-            </a>
-            {{ moment(recipe.timestamp).fromNow() }}
+            {% set user_link %}
+                <a href="{{ url_for('user', username=recipe.author.username) }}">
+                    {{ recipe.author.username }}
+                </a>
+            {% endset %}
+            {{ _('%(username)s %(when)s',
+                username=user_link, when=moment(recipe.timestamp).fromNow()) }}
             <br>
             {{ recipe.name }}
         </td>
