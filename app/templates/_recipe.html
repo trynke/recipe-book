@@ -9,6 +9,7 @@
             <a href="{{ url_for('user', username=recipe.author.username) }}">
                 {{ recipe.author.username }}
             </a>
+            {{ moment(recipe.timestamp).fromNow() }}
             <br>
             {{ recipe.name }}
         </td>
