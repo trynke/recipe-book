@@ -2,6 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, g
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_babel import _, get_locale
 from werkzeug.urls import url_parse
+from langdetect import detect, LangDetectException
 
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, EditProfileForm, EmptyForm
@@ -21,7 +22,12 @@ def before_request():
 def index():
     form = RecipeForm()
     if form.validate_on_submit():
-        recipe = Recipe(name=form.recipe.data, author=current_user)
+        try:
+            language = detect(form.recipe.data)
+        except LangDetectException:
+            language = ''
+        recipe = Recipe(name=form.recipe.data, author=current_user,
+                        language=language)
         db.session.add(recipe)
         db.session.commit()
         flash(_('You just added a new recipe!'))

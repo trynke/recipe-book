@@ -86,6 +86,7 @@ class Recipe(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     picture = db.Column(db.LargeBinary, nullable=True)
+    language = db.Column(db.String(5))
 
     def __repr__(self):
         return f'<Recipe {self.name}>'

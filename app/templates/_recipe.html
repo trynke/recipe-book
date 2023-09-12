@@ -15,6 +15,10 @@
                 username=user_link, when=moment(recipe.timestamp).fromNow()) }}
             <br>
             {{ recipe.name }}
+            {% if recipe.language and recipe.language != g.locale %}
+            <br><br>
+            <a href="#">{{ _('Translate') }}</a>
+            {% endif %}
         </td>
     </tr>
 </table>

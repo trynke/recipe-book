@@ -16,6 +16,7 @@ pyjwt = "*"
 flask-bootstrap = "*"
 flask-moment = "*"
 flask-babel = "<3"
+langdetect = "*"
 
 [dev-packages]
 
