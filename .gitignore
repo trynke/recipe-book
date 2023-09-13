@@ -2,3 +2,4 @@ app.db
 logs/
 messages.pot
 .vscode/
+.env
